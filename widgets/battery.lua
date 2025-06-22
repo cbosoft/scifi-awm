@@ -52,16 +52,23 @@ end
 
 function Battery:update(status)
 	local perc = self:getCapacity()
-  if perc < 10 then
-    naughty.notify { text = "BATTERY LOW!", timeout = 0 }
-  end
-	local prefix = ""
-	local suffix = ""
-	if self:getCharging()  then
-		prefix = "<span weight=\"heavy\">"
-		suffix = "</span>"
+	local style = ""
+	if perc > 95 then
+		-- do nothing
+  elseif self:getCharging()  then
+		style = "color=\"yellow\" "
+  else
+    if perc < 10 then
+		  style = "color=\"red\" weight=\"heavy\" "
+      naughty.notify { 
+        preset = naughty.config.presets.critical,
+        title = "BATTERY LOW!",
+        text = "Charge soon or lose your work!",
+        timeout = 4
+      }
+    end
 	end
-  self.widget.markup = prefix .. perc .. "%" .. suffix
+  self.widget.markup = "<span " .. style .. ">" .. perc .. "%</span>"
 end
 
 function Battery:getCapacity()
