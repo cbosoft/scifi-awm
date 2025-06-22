@@ -213,17 +213,6 @@ awful.screen.connect_for_each_screen(function(s)
       return clients_on_tag
     end
 
-    local function rule_match(c, rule)
-      for k, v in pairs(rule) do
-        if c[k] == nil then
-          return false
-        elseif string.match(c[k], v) then
-          return true
-        end
-      end
-      return false
-    end
-
     local function icon_for_tag(t)
       local icons = {
         { rule = { class = "kitty" }, icon = "terminal-solid.png" },
@@ -241,6 +230,24 @@ awful.screen.connect_for_each_screen(function(s)
         end
       end
       return nil
+    end
+
+    local function do_update_tagicon(widget, t, i, ts)
+      widget:get_children_by_id('index_role')[1].markup = "<sup>" .. t.name .. "/</sup>"
+      local icon = widget:get_children_by_id('my_icon_role')[1]
+      icon.image = icon_for_tag(t)
+      if t.selected then
+        icon.opacity = 0.9
+      else
+        icon.opacity = 0.5
+      end
+    end
+
+    local function update_tagicon(widget, t, i, ts)
+      -- no errors please and thank you.
+      pcall(function()
+        do_update_tagicon(widget, t, i, ts)
+      end)
     end
 
 
@@ -300,26 +307,8 @@ awful.screen.connect_for_each_screen(function(s)
             },
             id = 'background_role',
             widget = wibox.container.background,
-            create_callback = function (self, t, i, ts)
-              self:get_children_by_id('index_role')[1].markup = "<sup>" .. t.name .. "/</sup>"
-              local icon = self:get_children_by_id('my_icon_role')[1]
-              icon.image = icon_for_tag(t)
-              if t.selected then
-                icon.opacity = 0.9
-              else
-                icon.opacity = 0.5
-              end
-            end,
-            update_callback = function (self, t, i, ts)
-              self:get_children_by_id('index_role')[1].markup = "<sup>" .. t.name .. "/</sup>"
-              local icon = self:get_children_by_id('my_icon_role')[1]
-              icon.image = icon_for_tag(t)
-              if t.selected then
-                icon.opacity = 0.9
-              else
-                icon.opacity = 0.5
-              end
-            end,
+            create_callback = update_tagicon,
+            update_callback = update_tagicon,
         },
     }
 
