@@ -84,7 +84,8 @@ beautiful.taglist_fg = "#ffff00"
 beautiful.taglist_bg_focus = "#000000"
 beautiful.taglist_shape_border_width_focus = 2
 beautiful.taglist_shape_border_width_focus = 2
-beautiful.taglist_shape_border_color_focus = "#ddd"
+beautiful.taglist_shape_border_color_focus = "#dddddd"
+beautiful.taglist_shape_border_color = "#555555"
 
 
 -- This is used later as the default terminal and editor to run.
@@ -194,10 +195,31 @@ local function b_octagon(cr, width, height, radius)
     cr:line_to(0, 0)
     -- cr:close_path()
 end
+local function br_octagon(cr, width, height)
+    radius = height // 3
+    cr:move_to(width, 0)
+    cr:line_to(width, height - radius)
+    cr:line_to(width - radius, height)
+    cr:line_to(0, height)
+end
+local function r_octagon(cr, width, height)
+    radius = height // 3
+    cr:move_to(width, 0)
+    cr:line_to(width, height - radius)
+    cr:line_to(width - radius, height)
+end
+local function bl_octagon(cr, width, height)
+    radius = height // 3
+    cr:move_to(0, 0)
+    cr:line_to(0, height - radius)
+    cr:line_to(radius, height)
+    cr:line_to(width, height)
+end
 
 
 
 awful.screen.connect_for_each_screen(function(s)
+  naughty.notify { text = s.index .. ":" .. s.index }
     -- Wallpaper
     set_wallpaper(s)
     local function clients_for_tag(t)
@@ -233,14 +255,25 @@ awful.screen.connect_for_each_screen(function(s)
     end
 
     local function do_update_tagicon(widget, t, i, ts)
-      widget:get_children_by_id('index_role')[1].markup = "<sup>" .. t.name .. "/</sup>"
       local icon = widget:get_children_by_id('my_icon_role')[1]
-      icon.image = icon_for_tag(t)
+      local icon_name = icon_for_tag(t)
+      icon.image = icon_name
       if t.selected then
         icon.opacity = 0.9
       else
         icon.opacity = 0.5
       end
+      local name = t.name
+      if icon_name ~= nil then
+        name = name .. ":/"
+      end
+      local prefix = ""
+      local suffix = ""
+      if t.selected then
+        prefix = "<b>"
+        suffix = "</b>"
+      end
+      widget:get_children_by_id('index_role')[1].markup = prefix .. name .. suffix
     end
 
     local function update_tagicon(widget, t, i, ts)
@@ -278,7 +311,7 @@ awful.screen.connect_for_each_screen(function(s)
             layout  = wibox.layout.fixed.horizontal
         },
         style = {
-          shape = function (cr, w, h) b_octagon(cr, w, h, w/4) end,
+          shape = r_octagon,
           shape_border_width = 2,
           -- shape_border_color = "#dddddd"
         },
@@ -301,14 +334,18 @@ awful.screen.connect_for_each_screen(function(s)
                     },
                     layout = wibox.layout.fixed.horizontal,
                 },
-                left  = 10,
-                right = 10,
+                left  = 0,
+                right = 0,
                 widget = wibox.container.margin,
             },
             id = 'background_role',
+            -- shape = br_octagon,
+            -- shape_border_width = 1,
+            -- shape_border_color = "#333333",
             widget = wibox.container.background,
             create_callback = update_tagicon,
             update_callback = update_tagicon,
+            forced_width = 50,
         },
     }
 
@@ -319,40 +356,79 @@ awful.screen.connect_for_each_screen(function(s)
     --     buttons = tasklist_buttons
     -- }
 
+    function wrap_shape(w, shape)
+      return {
+        widget = wibox.container.background,
+        shape = shape,
+        shape_border_width = 2,
+        shape_border_color = "#777777",
+        --shape_clip = true,
+        {
+          widget = wibox.container.margin,
+          left = 15,
+          right = 15,
+          w,
+        }
+      }
+    end
+
     -- Create the wibox
-    s.mywibox = awful.wibar({ position = "top", screen = s, bg = "#ffffff00", fg = "#ddd", height = 24 })
+    s.mywibox = awful.wibar({ position = "top", screen = s, bg = "#ffffff00", fg = "#ddd", height = 30 })
 
     -- Add widgets to the wibox
     s.mywibox:setup {
         layout = wibox.layout.align.horizontal,
-        { -- Left widgets
-            layout = wibox.layout.fixed.horizontal,
+        {
+          widget = wibox.container.background,
+          shape = function (cr, w, h) br_octagon(cr, w, h) end,
+          shape_border_width = 2,
+          shape_border_color = "#dddddd",
+          {
+            widget = wibox.container.margin,
+            right = 15,
             {
+              layout = wibox.layout.fixed.horizontal,
+              spacing = 10,
+              s.mytaglist,
               {
                 {
-                  widget = wibox.widget.textbox,
-                  text = "" .. s.index
+                  {
+                    widget = wibox.widget.textbox,
+                    text = "SCR:/" .. s.index .. "/",
+                    font = "Iosevka Term 10",
+                  },
+                  widget = wibox.container.margin,
+                  left = 5,
+                  right = 5,
                 },
                 widget = wibox.container.background,
+                fg = "#bbbbbb",
               },
-              widget = wibox.container.margin,
-              left = 5,
-              right = 5,
-            },
-            s.mytaglist,
-            s.mypromptbox,
+              s.mypromptbox,
+            }
+          }
         },
         nil,
-        { -- Right widgets
-            layout = wibox.layout.fixed.horizontal,
-            spacing = 10,
-            my_widgets.volume,
-            my_widgets.mpd,
-            wibox.widget.systray(),
-            battery.widget,
-            vpn.widget,
-            mytextclock,
-            -- s.mylayoutbox,
+        {
+          widget = wibox.container.background,
+          shape = function (cr, w, h) bl_octagon(cr, w, h) end,
+          shape_border_width = 2,
+          shape_border_color = "#dddddd",
+          {
+            widget = wibox.container.margin,
+            left = 15,
+            {
+              layout = wibox.layout.fixed.horizontal,
+              spacing = 0,
+              wibox.widget.systray(),
+              wrap_shape(my_widgets.volume, bl_octagon),
+              wrap_shape(my_widgets.mpd, bl_octagon),
+              wrap_shape(battery.widget, bl_octagon),
+              wrap_shape(vpn.widget, bl_octagon),
+              wrap_shape(mytextclock, bl_octagon),
+              -- wrap_shape(s.mylayoutbox, bl_octagon),
+            }
+          }
         },
     }
 end)
