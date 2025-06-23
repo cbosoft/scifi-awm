@@ -15,10 +15,10 @@ local current_volume
 local bar = wibox.widget {
   max_value = 100,
   value = 0,
-  forced_width = 20,
   forced_height = 5,
   border_width = 0,
   color = "#555555",
+  margins = { left = 0, right = 0, top = 10, bottom = 10 },
   background_color = "#000000",
   widget = wibox.widget.progressbar
 }
@@ -31,17 +31,13 @@ local label = wibox.widget {
 }
 
 local bar_and_label = wibox.widget {
-  {
-    nil,
-    bar,
-    nil,
-    layout = wibox.layout.align.vertical
-  },
+  bar,
   {
     label,
     fg = "#FFFFFF",
     widget = wibox.container.background
   },
+  forced_width = 50,
   layout = wibox.layout.stack
 }
 
