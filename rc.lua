@@ -623,11 +623,11 @@ awful.rules.rules = {
     },
 
     -- Floating clients.
-    { rule_any = { class = { "cantata", "Sido", "matplotlib" }, name = { "Picture-in-picture" }, }, properties = { floating = true }},
+    { rule_any = { class = { "cantata", "Sido", "matplotlib", "FLOATME" }, name = { "Picture-in-picture" }, }, properties = { floating = true }},
 
     -- Add titlebars to normal clients and dialogs
     { rule_any = {type = { "normal", "dialog" } }, properties = { titlebars_enabled = true } },
-    { rule_any = {type = { "dialog" }, class = { "matplotlib" } }, properties = { placement = awful.placement.centered } },
+    { rule_any = {type = { "dialog" }, class = { "matplotlib", "FLOATME" } }, properties = { placement = awful.placement.centered } },
 
     -- Add windows to specific screens/tags
     { rule = { class = "Google-chrome" }, properties = { screen = screen.primary, tag = screen.primary.tags[3], } },
