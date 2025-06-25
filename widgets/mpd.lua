@@ -20,12 +20,17 @@ local PAUSE_MPD_CMD = "mpc pause"
 local STOP_MPD_CMD = "mpc stop"
 local NEXT_MPD_CMD = "mpc next"
 local PREV_MPD_CMD = "mpc prev"
+local OPEN_NCMPCPP_CMD = "kitty --class FLOATME ncmpcpp"
 
 local PATH_TO_ICONS = "/usr/share/icons/foo/"
 local PAUSE_ICON_NAME = PATH_TO_ICONS .. "/24x24/actions/media-playback-pause-symbolic.symbolic.png"
 local PLAY_ICON_NAME = PATH_TO_ICONS .. "/24x24/actions/media-playback-start-symbolic.symbolic.png"
 local STOP_ICON_NAME = PATH_TO_ICONS .. "/24x24/actions/media-playback-stop-symbolic.symbolic.png"
 
+
+local function trim(s)
+   return s:match "^%s*(.-)%s*$"
+end
 
 local function octagon_with_flair(cr, width, height)
   local radius = 20
@@ -41,6 +46,7 @@ local function octagon_with_flair(cr, width, height)
   cr:line_to(0, radius)
   cr:close_path()
 end
+
 
 local icon = wibox.widget {
         id = "icon",
@@ -77,7 +83,7 @@ local function parse_mpd_status(stdout)
   stdout = string.gsub(stdout, "\n", "")
   local mpdpercent = string.match(stdout, "(%d%d)%%")
   local mpdstatus = string.match(stdout, "%[(%a+)%]")
-  return { running = string.len(stdout) > 0, song = current_song, perc = mpdpercent, status = mpdstatus }
+  return { running = string.len(stdout) > 0, song = current_song, perc = mpdpercent, status = trim(mpdstatus) }
 end
 
 
@@ -142,9 +148,9 @@ end
 
 
 mpd_widget:connect_signal("button::press", function(_, _, _, button)
-  if (button == 1) then awful.spawn(TOGGLE_MPD_CMD, false)      -- left click
+  if (button == 1) then awful.spawn(OPEN_NCMPCPP_CMD, false)      -- left click
   elseif (button == 2) then awful.spawn(STOP_MPD_CMD, false)
-  elseif (button == 3) then awful.spawn(PAUSE_MPD_CMD, false)
+  elseif (button == 3) then awful.spawn(TOGGLE_MPD_CMD, false)
   elseif (button == 4) then awful.spawn(NEXT_MPD_CMD, false)  -- scroll up
   elseif (button == 5) then awful.spawn(PREV_MPD_CMD, false)  -- scroll down
   end
